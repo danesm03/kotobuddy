@@ -1,13 +1,14 @@
 #start-screen {
-    width: 100%;
-    height: 100%;
     align: center middle; /* vertical + horizontal centering */
 }
 
+Button{
+    margin-right: 1;
+}
 #title {
     text-align: center;
     color: rgb(180, 118, 128);
-    margin-bottom: 1;
+    margin-bottom: 27;
 }
 
 #kotobuddy_subtitle {
@@ -20,3 +21,15 @@
     align: center middle; /* centers the button inside Horizontal */
 }
 
+/*GENERATE TEXT SCREEN CSS*/
+
+#generate_text_input {
+    height: 75%;
+}
+
+
+
+#gentextscrn-cntnr{
+
+    align: center middle;
+}
