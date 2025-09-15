@@ -4,6 +4,8 @@ from textual.widgets import Footer, Header, Static, Button, Input, ListItem, Lis
 from textual.screen import Screen
 from textual import on
 from rich.console import Console
+from utils.word_parser import InputText
+
 
 console = Console()
 
@@ -39,6 +41,10 @@ class SavedCardsScreen(Screen):
 
 
 class GenerateScreen(Screen):
+    def __init__(self):
+        super().__init__()
+        self.input_text = ""
+        self.input_handler = InputText()
     BINDINGS = [
         ("ctrl+d", "toggle_dark_mode", "Toggle Dark Mode"),#("return", "app.push_screen(GenerateScreen)", "Start")
     ]    
@@ -61,10 +67,17 @@ class GenerateScreen(Screen):
         )
     #TEST LOGGING TO VERIFY THAT INPUT TEXT CAN BE PORTED ELSEWHERE
     @on(Button.Pressed, "#generate-text-btn")
+    def update_input_text(self):
+        self.input_text = self.query_one("#generate_text_input", Input).value
+        self.input_handler.update(self.input_text)
+        self.log_message(self.input_handler.to_word_nodes())
+
+
     def print_text_input(self, event: Button.Pressed):
-        text_input = self.query_one("#generate_text_input", Input)
-        user_text = text_input.value
-        return user_text
+        pass
+        #text_input = self.query_one("#generate_text_input", Input)
+        #user_text = text_input.value
+        
         #self.log_message(f"user_text: {user_text}")
 
     def log_message(self, message: str) -> None:
@@ -72,6 +85,11 @@ class GenerateScreen(Screen):
         log_widget = self.query_one("#log_widget", Static)
         current_text = str(log_widget.render())  # get current text
         log_widget.update(f"{current_text}\n{message}")  # append new line
+
+
+
+
+
         
 
 
