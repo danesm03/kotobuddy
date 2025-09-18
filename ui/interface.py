@@ -1,6 +1,6 @@
 from textual.app import App, ComposeResult
-from textual.containers import ScrollableContainer, Vertical, Horizontal, Container
-from textual.widgets import Footer, Header, Static, Button, Input, ListItem, ListView, Label, Log
+from textual.containers import HorizontalGroup, Horizontal, Vertical
+from textual.widgets import Static, Collapsible, Label, Header, Footer, ListView, ListItem, Button, Input
 from textual.screen import Screen
 from textual import on
 from rich.console import Console
@@ -8,6 +8,24 @@ from utils.word_parser import InputText
 
 
 console = Console()
+
+class ReadViewScreen(Screen):
+#NEED TO FIGURE OUT HOW TO GENERATE THE TEXT TO BE ALL WORD OBJECTS
+    def __init__(self):
+        super().__init__()
+    def compose(self):
+        yield Header()
+        yield Footer()
+
+
+class Word(HorizontalGroup):
+    def __init__(self, word_node):
+        super().__init__()
+        self.node = word_node
+    def compose(self):
+        with Collapsible(collapsed =True):
+            yield Label(self.node.word)
+    
 
 class SavedTextsScreen(Screen):
     BINDINGS = [
@@ -67,24 +85,26 @@ class GenerateScreen(Screen):
         )
     #TEST LOGGING TO VERIFY THAT INPUT TEXT CAN BE PORTED ELSEWHERE
     @on(Button.Pressed, "#generate-text-btn")
+
     def update_input_text(self):
         self.input_text = self.query_one("#generate_text_input", Input).value
         self.input_handler.update(self.input_text)
         self.log_message(self.input_handler.to_word_nodes())
 
 
-    def print_text_input(self, event: Button.Pressed):
-        pass
-        #text_input = self.query_one("#generate_text_input", Input)
-        #user_text = text_input.value
-        
-        #self.log_message(f"user_text: {user_text}")
-
     def log_message(self, message: str) -> None:
         """Append a message to the internal log widget."""
         log_widget = self.query_one("#log_widget", Static)
         current_text = str(log_widget.render())  # get current text
         log_widget.update(f"{current_text}\n{message}")  # append new line
+
+    #DYNAMIC WORD NODE GENERATION
+    """
+    def generate_node_buttons(self):
+        for node in self.input_handler.nodes:
+            yield Word(node)
+    """
+
 
 
 
@@ -163,3 +183,9 @@ class KotobuddyApp(App):
     @on(Button.Pressed, "#saved-texts-btn")
     def enter_savedtexts(self):
         self.push_screen(SavedTextsScreen())
+
+    """
+    @on(Button.Pressed, "#generate-text-btn")
+    def push_read_view_screen(self):
+        self.push_screen(ReadViewScreen())
+    """
