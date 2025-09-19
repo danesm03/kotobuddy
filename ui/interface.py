@@ -17,7 +17,7 @@ class WordClicked(Message):
 
 class AddToFlashcards(Button):
     def __init__(self, node):
-        super().__init__(classes="add-to-flash-btn", label="Add To Flashcards", variant="primary")
+        super().__init__(classes=="add-to-flash-btn", label="Add To Flashcards", variant="primary")
         self.node = node
 
     def on_click(self, event: events.Click) -> None:
@@ -38,7 +38,9 @@ class Word(Button):
 
 
 class ReadViewScreen(Screen):
-#NEED TO FIGURE OUT HOW TO GENERATE THE TEXT TO BE ALL WORD OBJECTS
+
+
+
     def __init__(self, handler):
         super().__init__()
         self.input_handler = handler
@@ -53,6 +55,7 @@ class ReadViewScreen(Screen):
             Horizontal(id="info-panel"),
             id="readview_master"
         )
+
 
 
     def on_word_clicked(self, message: WordClicked) -> None:
@@ -74,6 +77,8 @@ class ReadViewScreen(Screen):
         self.nodes = self.input_handler.nodes
         self.assemble_text()
 
+
+
     
 
         
@@ -84,9 +89,7 @@ class ReadViewScreen(Screen):
 
 
 class SavedTextsScreen(Screen):
-    BINDINGS = [
-        ("ctrl+d", "toggle_dark_mode", "Toggle Dark Mode"),#("return", "app.push_screen(GenerateScreen)", "Start")
-    ] 
+
 
     def compose(self):
         yield Header()
@@ -99,10 +102,7 @@ class SavedTextsScreen(Screen):
         )
 
 class SavedCardsScreen(Screen):
-    BINDINGS = [
-        ("ctrl+d", "toggle_dark_mode", "Toggle Dark Mode"),#("return", "app.push_screen(GenerateScreen)", "Start")
-    ] 
-
+  
     def compose(self):
         yield Header()
         yield Footer()
@@ -181,8 +181,7 @@ class GenerateScreen(Screen):
 
 class StartScreen(Screen):
     BINDINGS = [
-        ("d", "toggle_dark_mode", "Toggle Dark Mode"),#("return", "app.push_screen(GenerateScreen)", "Start")
-    ]
+        ("d", "toggle_dark_mode", "Toggle Dark Mode")]
 
 
     def compose(self) -> ComposeResult:
@@ -218,6 +217,8 @@ class StartScreen(Screen):
 class KotobuddyApp(App):
     BINDINGS = [
         ("d", "toggle_dark_mode", "Toggle Dark Mode"),
+        ("b","back", "Back"),
+        ("s", "to_start_screen", "Start Screen")
     ]
 
     CSS_PATH = "kotobuddy.tcss"
@@ -234,6 +235,14 @@ class KotobuddyApp(App):
             self.theme = "textual-dark"
         else:
             self.theme = "textual-light"
+    
+    def action_back(self):
+        return super().action_back()
+    
+    def action_to_start_screen(self):
+        self.push_screen(StartScreen())
+            
+ 
     
     def on_mount(self):
         self.push_screen(StartScreen())
