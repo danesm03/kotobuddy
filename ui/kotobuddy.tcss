@@ -35,8 +35,25 @@ Button{
 }
 
 
+#info-panel{
+    height: 25%;
+    align: center middle;
+}
+
+#readtext-ctnr{
+    height: 75%;
+}
+
 .word{
+    margin: 0;
+    min-width: 0;
+    width: auto;
+    height: auto;
     padding: 0;
+    border: none;
 }
 
 
+.add-to-flash-btn{
+    margin-left: 2;
+}

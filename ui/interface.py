@@ -17,7 +17,7 @@ class WordClicked(Message):
 
 class AddToFlashcards(Button):
     def __init__(self, node):
-        super().__init__(label="Add To Flashcards", variant="primary")
+        super().__init__(classes="add-to-flash-btn", label="Add To Flashcards", variant="primary")
         self.node = node
 
     def on_click(self, event: events.Click) -> None:
@@ -50,7 +50,8 @@ class ReadViewScreen(Screen):
             HorizontalScroll(
             id="readtext-ctnr"
         ),
-            Horizontal(id="info-panel")
+            Horizontal(id="info-panel"),
+            id="readview_master"
         )
 
 
