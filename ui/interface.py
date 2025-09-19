@@ -6,9 +6,15 @@ from textual import on, events
 from textual.message import Message
 from rich.console import Console
 from utils.word_parser import InputText
+from utils.data_types import TextData
+import os
+import data.text_data
+import data.cards_data
 
 
 console = Console()
+
+
 
 class WordClicked(Message): 
         def __init__(self, node):
@@ -24,8 +30,6 @@ class AddToFlashcards(Button):
         print("Flashcard button clicked. Functionality to be added later with data saving functionality")
         
     
-
-
 class Word(Button):
     def __init__(self, word_node):
         self.node = word_node
@@ -36,10 +40,11 @@ class Word(Button):
         self.post_message(message=WordClicked(self.node))
 
 
-
 class ReadViewScreen(Screen):
 
-
+    BINDINGS = [
+        ("t", "save_text", "Save Text")
+    ]
 
     def __init__(self, handler):
         super().__init__()
@@ -55,8 +60,6 @@ class ReadViewScreen(Screen):
             Horizontal(id="info-panel"),
             id="readview_master"
         )
-
-
 
     def on_word_clicked(self, message: WordClicked) -> None:
         panel = self.query_one("#info-panel")
@@ -77,20 +80,15 @@ class ReadViewScreen(Screen):
         self.nodes = self.input_handler.nodes
         self.assemble_text()
 
-
-
-    
-
-        
-    
-
-            
-
+    def action_save_text(self):
+        my_dir = os.path.dirname(os.path.abspath(__file__))
+        project_root = os.path.dirname(my_dir)
+        data_dir = os.path.join(project_root, "data")
+        with open(os.path.join(data_dir, "text_data.py"), "a") as f:
+            f.write(f'TextData(id="{self.input_handler.text[:5]}", text="{self.input_handler.text}")\n')
 
 
 class SavedTextsScreen(Screen):
-
-
     def compose(self):
         yield Header()
         yield Footer()

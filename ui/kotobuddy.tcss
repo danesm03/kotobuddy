@@ -1,5 +1,5 @@
 #start-screen {
-    align: center middle; /* vertical + horizontal centering */
+    align: center middle;
 }
 
 Button{
@@ -18,10 +18,9 @@ Button{
 }
 
 #start-btn-container {
-    align: center middle; /* centers the button inside Horizontal */
+    align: center middle;
 }
 
-/*GENERATE TEXT SCREEN CSS*/
 
 #generate_text_input {
     height: 75%;
