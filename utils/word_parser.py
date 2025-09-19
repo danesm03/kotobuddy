@@ -14,16 +14,19 @@ class WordNode:
         self.root_word = root_word
         self.unknown = unknown
         self.definition = self.get_definition()
+
+
     
     def get_definition(self):
             """Fetches the jamdict definition, returns the first entry. Senses is the raw english response of the first entry, gloss is the polished definition"""
             result = Jamdict().lookup(self.root_word)
             if result.entries and result.entries[0].senses:
-                 return result.entries[0].senses[0].gloss
+                 return ", ".join(g.text for g in result.entries[0].senses[0].gloss)
             else: 
                  return None
             
-
+    def __repr__(self):
+         return f"WordNode({self.word},{self.root_word},{self.definition})"
 
 
     
@@ -37,7 +40,7 @@ class InputText:
 
     def to_word_nodes(self):
         """REMOVE results list and returning in final functionality, just there for testing purposes to print to the LOG"""
-        results = []
+
         
         tagger = fugashi.GenericTagger(ipadic.MECAB_ARGS)
         text = self.text
@@ -45,6 +48,10 @@ class InputText:
             lemma = word.feature[6]
             node = WordNode(word.surface, lemma, word.is_unk)
             self.nodes.append(node)
-            results.append(f"Token: {node.word}\tLemma: {node.root_word} Definition: {node.definition}")
-        return results
+        return self.nodes
+            #results.append(f"Token: {node.word}\tLemma: {node.root_word} Definition: {node.definition}")
+
+    
+
+
         

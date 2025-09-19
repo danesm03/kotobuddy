@@ -33,3 +33,10 @@ Button{
 
     align: center middle;
 }
+
+
+.word{
+    padding: 0;
+}
+
+
