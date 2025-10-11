@@ -23,7 +23,7 @@ class WordClicked(Message):
 
 class AddToFlashcards(Button):
     def __init__(self, node):
-        super().__init__(classes=="add-to-flash-btn", label="Add To Flashcards", variant="primary")
+        super().__init__(label="Add To Flashcards", classes="add-to-flash-btn", variant="primary")
         self.node = node
 
     def on_click(self, event: events.Click) -> None:
@@ -144,6 +144,8 @@ class GenerateScreen(Screen):
     def push_txt_to_readview(self):
         self.input_handler.to_word_nodes()
         self.app.push_screen(ReadViewScreen(self.input_handler))
+        
+        
 
 
     #TEST LOGGING TO VERIFY THAT INPUT TEXT CAN BE PORTED ELSEWHERE
