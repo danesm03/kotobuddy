@@ -1,10 +1,6 @@
-import MeCab
 from jamdict import Jamdict
 import fugashi
 import ipadic
-from rich.console import Console
-
-
 
 class WordNode:
 

@@ -1,10 +1,10 @@
 from textual.app import App, ComposeResult
-from textual.containers import HorizontalGroup, Horizontal, Vertical, Container, HorizontalScroll
-from textual.widgets import Static, Collapsible, Label, Header, Footer, ListView, ListItem, Button, Input
+from textual.containers import  Horizontal, Vertical, Container, HorizontalScroll
+from textual.widgets import Static, Label, Header, Footer, ListView, ListItem, Button, Input
 from textual.screen import Screen
 from textual import on, events
 from textual.message import Message
-from rich.console import Console
+
 from utils.word_parser import InputText
 from utils.data_types import TextData
 import os
@@ -12,7 +12,7 @@ import data.text_data
 import data.cards_data
 
 
-console = Console()
+
 
 
 

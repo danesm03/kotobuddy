@@ -1,0 +1,5 @@
+textual>=0.70.0
+fugashi>=1.3.0
+ipadic>=1.0.0
+jamdict>=0.1.1
+jamdict-data>=1.0.0
