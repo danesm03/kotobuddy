@@ -2,6 +2,7 @@ from jamdict import Jamdict
 import fugashi
 import ipadic
 
+
 class WordNode:
 
     def __init__(self, word, root_word, unknown, definition):

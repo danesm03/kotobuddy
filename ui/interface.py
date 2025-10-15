@@ -1,15 +1,21 @@
+import os
+
 from textual.app import App, ComposeResult
-from textual.containers import  Horizontal, Vertical, Container, HorizontalScroll
-from textual.widgets import Static, Label, Header, Footer, ListView, ListItem, Button, Input
 from textual.screen import Screen
 from textual import on, events
+from textual.containers import  Horizontal, Vertical, Container, HorizontalScroll
+from textual.widgets import Static, Label, Header, Footer, ListView, ListItem, Button, Input
 from textual.message import Message
 
+
 from utils.word_parser import InputText
-from utils.data_types import TextData
-import os
-import data.text_data
-import data.cards_data
+from utils.data_types import Flashcard, get_due_cards, Difficulty
+from utils.db import engine
+
+from sqlmodel import Session, SQLModel
+
+
+
 
 
 
@@ -27,7 +33,13 @@ class AddToFlashcards(Button):
         self.node = node
 
     def on_click(self, event: events.Click) -> None:
-        print("Flashcard button clicked. Functionality to be added later with data saving functionality")
+        flashcard = Flashcard.set_review_date(word=self.node.root_word, difficulty=Difficulty.EASY)
+        with Session(engine) as session:
+            if flashcard == None:
+                print("Flashcard is none")
+            else:
+                session.add(flashcard)
+                session.commit()
         
     
 class Word(Button):
@@ -66,7 +78,7 @@ class ReadViewScreen(Screen):
         panel.remove_children()
 
         panel.mount(
-        Label(content=f"Definition:{message.node.definition}"),
+        Label(content=f"Definition:{message.node.definition}          "),
         AddToFlashcards(message.node)
         )
     
@@ -86,6 +98,7 @@ class ReadViewScreen(Screen):
         data_dir = os.path.join(project_root, "data")
         with open(os.path.join(data_dir, "text_data.py"), "a") as f:
             f.write(f'TextData(id="{self.input_handler.text[:5]}", text="{self.input_handler.text}")\n')
+        
 
 
 class SavedTextsScreen(Screen):
@@ -94,10 +107,12 @@ class SavedTextsScreen(Screen):
         yield Footer()
         #placeholder list - need to add item adder logic
         yield ListView(
-            ListItem(Label("One")),
-            ListItem(Label("Two")),
-            ListItem(Label("Three")),
+            id="saved-texts-list"
         )
+    
+    def assemble_list_view(self):
+        for text in texts_list:
+            self.query_one("#saved-texts-list").mount(ListItem(text.id))
 
 class SavedCardsScreen(Screen):
   

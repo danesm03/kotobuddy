@@ -1,5 +1,10 @@
 from ui.interface import KotobuddyApp
+from sqlmodel import SQLModel
 from utils.word_parser import *
+from utils.db import engine
+
+
+SQLModel.metadata.create_all(engine)
 
 
 
