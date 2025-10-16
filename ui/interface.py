@@ -4,7 +4,7 @@ from textual.app import App, ComposeResult
 from textual.screen import Screen
 from textual import on, events
 from textual.containers import  Horizontal, Vertical, Container, HorizontalScroll
-from textual.widgets import Static, Label, Header, Footer, ListView, ListItem, Button, Input
+from textual.widgets import Static, Label, Header, Footer, ListView, ListItem, Button, Input, ContentSwitcher
 from textual.message import Message
 
 
@@ -19,7 +19,7 @@ from sqlmodel import Session, SQLModel
 
 
 
-
+    
 
 
 class WordClicked(Message): 
@@ -111,20 +111,55 @@ class SavedTextsScreen(Screen):
         )
     
     def assemble_list_view(self):
-        for text in texts_list:
-            self.query_one("#saved-texts-list").mount(ListItem(text.id))
+        pass
+        #for text in texts_list:
+            #self.query_one("#saved-texts-list").mount(ListItem(text.id))
 
 class SavedCardsScreen(Screen):
-  
+    
+    def __init__(self):
+        super().__init__()
+        
+        self.session = Session(engine)
+        self.cards = get_due_cards(self.session)
     def compose(self):
         yield Header()
         yield Footer()
-        #placeholder list - need to add item adder logic
-        yield ListView(
-            ListItem(Label("One")),
-            ListItem(Label("Two")),
-            ListItem(Label("Three")),
+        with Horizontal(id="card_sides"):
+            yield Button("Card Front", id="card-front")
+            yield Button("Card Back", id="card-back")
+        with ContentSwitcher(initial="card-front"):
+            yield Static(id="card-front")
+            yield Static(id="card-back")
+                             
+        yield Horizontal(
+            Button("Easy", id="easy", variant="success"),
+            Button("Medium", id="medium", variant="warning"),
+            Button("Hard", id="hard", variant="error")
         )
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        self.query_one(ContentSwitcher).current = event.button.id  
+    
+        
+    def assemble_card(self):
+        curr_card = self.cards[0].to_word_node()
+        front = self.query_one("card-front")
+        back = self.query_one("card-back")
+        front.update(curr_card.root_word)
+        back.update(curr_card.definition)
+
+
+        
+
+
+    
+
+
+
+
+    def on_mount(self):
+        self.assemble_card()
 
 
 class GenerateScreen(Screen):
@@ -132,6 +167,7 @@ class GenerateScreen(Screen):
         super().__init__()
         self.input_text = ""
         self.input_handler = InputText()
+    
     BINDINGS = [
         ("ctrl+d", "toggle_dark_mode", "Toggle Dark Mode"),#("return", "app.push_screen(GenerateScreen)", "Start")
     ]    
