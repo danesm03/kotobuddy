@@ -3,7 +3,7 @@ import os
 from textual.app import App, ComposeResult
 from textual.screen import Screen
 from textual import on, events
-from textual.containers import  Horizontal, Vertical, Container, HorizontalScroll
+from textual.containers import  Horizontal, Vertical, Container, HorizontalScroll, Center, CenterMiddle
 from textual.widgets import Static, Label, Header, Footer, ListView, ListItem, Button, Input, ContentSwitcher
 from textual.message import Message
 
@@ -33,7 +33,7 @@ class AddToFlashcards(Button):
         self.node = node
 
     def on_click(self, event: events.Click) -> None:
-        flashcard = Flashcard.set_review_date(word=self.node.root_word, difficulty=Difficulty.EASY)
+        flashcard = Flashcard.set_review_date(word=self.node.root_word, difficulty=Difficulty.HARD)
         with Session(engine) as session:
             if flashcard == None:
                 print("Flashcard is none")
@@ -118,24 +118,30 @@ class SavedTextsScreen(Screen):
 class SavedCardsScreen(Screen):
     
     def __init__(self):
-        super().__init__()
-        
+        super().__init__(id="saved-cards-screen")
+        self.counter = 0 
         self.session = Session(engine)
+        self.curr_card = self.get_curr_card()
+        
         
     def compose(self):
         yield Header()
         yield Footer()
-        with Horizontal(id="card_sides"):
-            yield Button("Card Front", id="card-front")
-            yield Button("Card Back", id="card-back")
-        with ContentSwitcher(initial="card-front"):
-            yield Static(id="card-front")
-            yield Static(id="card-back")
+        
+        with CenterMiddle(id="card_sides"):
+                yield Button("Card Front", id="card-front")
+                yield Button("Card Back", id="card-back")
+        with CenterMiddle(id="switcher-cntr"):
+            with ContentSwitcher(id="card_switcher", initial="card-front"):
+                yield Static(id="card-front")
+                yield Static(id="card-back")
+            
                              
         yield Horizontal(
             Button("Easy", id="easy", variant="success"),
             Button("Medium", id="medium", variant="warning"),
-            Button("Hard", id="hard", variant="error")
+            Button("Hard", id="hard", variant="error"),
+            id="difficulties"
         )
 
     @on(Button.Pressed, "#card-front")
@@ -145,30 +151,68 @@ class SavedCardsScreen(Screen):
     @on(Button.Pressed, "#card-back")
     def switch_back(self):
         self.query_one(ContentSwitcher).current = "card-back"
+
+    @on(Button.Pressed, "#easy")
+    def save_as_easy(self):
+        self.curr_card.difficulty = Difficulty.EASY
+        self.curr_card.set_review_date(self.curr_card.word, self.curr_card.difficulty)
+        self.session.add(self.curr_card)
+        self.session.commit()
+        self.session.refresh(self.curr_card)
+        self.counter += 1
+        self.curr_card = self.get_curr_card()
+        self.assemble_card()
+
+    @on(Button.Pressed, "#medium")
+    def save_as_med(self):
+        self.curr_card.difficulty = Difficulty.MEDIUM
+        self.curr_card.set_review_date(self.curr_card.word, self.curr_card.difficulty)
+        self.session.add(self.curr_card)
+        self.session.commit()
+        self.session.refresh(self.curr_card)
+        self.counter += 1
+        self.curr_card = self.get_curr_card()
+        self.assemble_card()
+
+    @on(Button.Pressed, "#hard")
+    def save_as_hard(self):
+        self.curr_card.difficulty = Difficulty.HARD
+        self.curr_card.set_review_date(self.curr_card.word, self.curr_card.difficulty)
+        self.session.add(self.curr_card)
+        self.session.commit()
+        self.session.refresh(self.curr_card)
+        self.counter += 1
+        self.curr_card = self.get_curr_card()
+        self.assemble_card()
+
+
+
     
+    def get_curr_card(self):
+        with Session(engine) as session:
+            cards = get_due_cards(session)
+        if not cards:
+            return None
+        if self.counter >= len(cards):
+            self.counter = 0
+        return cards[self.counter]
         
     def assemble_card(self):
-        print(f"self.cards: {get_due_cards(Session(engine))}")
-        cards = get_due_cards(Session(engine))
-        card = cards[0]
-        curr_card = to_word_node(card.word)
+        
+        card = to_word_node(self.curr_card.word)
         cs = self.query_one(ContentSwitcher)
         front = cs.query_one("#card-front", Static)
         back = cs.query_one("#card-back", Static)
-        front.update(curr_card.root_word)
-        back.update(curr_card.definition)
-
-
-        
-
-
-    
-
-
-
+        if not self.curr_card:
+            front.update("No cards for review")
+            back.update("")
+        front.update(card.root_word)
+        back.update(card.definition)
 
     def on_mount(self):
-        self.assemble_card()
+        self.set_timer(0.25, self.assemble_card())
+
+
 
 
 class GenerateScreen(Screen):
@@ -190,7 +234,7 @@ class GenerateScreen(Screen):
             max_length=25000,
             id="generate_text_input"
         )
-        yield Static("Logs:\n", id="log_widget")
+        
         yield Horizontal(
             Button("Saved Cards", id="saved-cards-btn", variant="primary"),
             Button("Generate", id="generate-text-btn", variant="primary"),
@@ -208,7 +252,7 @@ class GenerateScreen(Screen):
         
 
 
-    #TEST LOGGING TO VERIFY THAT INPUT TEXT CAN BE PORTED ELSEWHERE
+    
     @on(Button.Pressed, "#generate-text-btn")
 
     def update_input_text(self):
@@ -218,10 +262,7 @@ class GenerateScreen(Screen):
         #self.log_message(self.input_handler.to_word_nodes())
 
 
-    """def log_message(self, message: str) -> None:
-        log_widget = self.query_one("#log_widget", Static)
-        current_text = str(log_widget.render())  # get current text
-        log_widget.update(f"{current_text}\n{message}")  # append new line"""
+
 
 
 
@@ -297,7 +338,11 @@ class KotobuddyApp(App):
             self.theme = "textual-light"
     
     def action_back(self):
-        return super().action_back()
+        if getattr(self, "screen_stack", None):
+            self.pop_screen()
+        else:
+            
+            return super().action_back()
     
     def action_to_start_screen(self):
         self.push_screen(StartScreen())
