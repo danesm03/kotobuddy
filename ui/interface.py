@@ -9,7 +9,7 @@ from textual.message import Message
 
 
 from utils.word_parser import InputText
-from utils.data_types import Flashcard, get_due_cards, Difficulty
+from utils.data_types import Flashcard, get_due_cards, Difficulty, to_word_node
 from utils.db import engine
 
 from sqlmodel import Session, SQLModel
@@ -121,7 +121,7 @@ class SavedCardsScreen(Screen):
         super().__init__()
         
         self.session = Session(engine)
-        self.cards = get_due_cards(self.session)
+        
     def compose(self):
         yield Header()
         yield Footer()
@@ -138,14 +138,23 @@ class SavedCardsScreen(Screen):
             Button("Hard", id="hard", variant="error")
         )
 
-    def on_button_pressed(self, event: Button.Pressed) -> None:
-        self.query_one(ContentSwitcher).current = event.button.id  
+    @on(Button.Pressed, "#card-front")
+    def switch_front(self):
+        self.query_one(ContentSwitcher).current = "card-front"
+
+    @on(Button.Pressed, "#card-back")
+    def switch_back(self):
+        self.query_one(ContentSwitcher).current = "card-back"
     
         
     def assemble_card(self):
-        curr_card = self.cards[0].to_word_node()
-        front = self.query_one("card-front")
-        back = self.query_one("card-back")
+        print(f"self.cards: {get_due_cards(Session(engine))}")
+        cards = get_due_cards(Session(engine))
+        card = cards[0]
+        curr_card = to_word_node(card.word)
+        cs = self.query_one(ContentSwitcher)
+        front = cs.query_one("#card-front", Static)
+        back = cs.query_one("#card-back", Static)
         front.update(curr_card.root_word)
         back.update(curr_card.definition)
 
