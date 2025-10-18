@@ -4,3 +4,4 @@ ipadic>=1.0.0
 jamdict>=0.1a11.post2
 jamdict-data>=1.0.0
 sqlmodel>=0.0.21
+

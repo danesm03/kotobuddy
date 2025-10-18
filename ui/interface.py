@@ -12,7 +12,7 @@ from utils.word_parser import InputText
 from utils.data_types import Flashcard, get_due_cards, Difficulty, to_word_node
 from utils.db import engine
 
-from sqlmodel import Session, SQLModel
+from sqlmodel import Session
 
 
 
@@ -102,6 +102,11 @@ class ReadViewScreen(Screen):
 
 
 class SavedTextsScreen(Screen):
+    def __init__(self):
+        super().__init__(id="saved-texts-screen")
+    
+
+
     def compose(self):
         yield Header()
         yield Footer()
@@ -122,7 +127,7 @@ class SavedCardsScreen(Screen):
         self.counter = 0 
         self.session = Session(engine)
         self.curr_card = self.get_curr_card()
-        
+
         
     def compose(self):
         yield Header()
@@ -217,7 +222,7 @@ class SavedCardsScreen(Screen):
 
 class GenerateScreen(Screen):
     def __init__(self):
-        super().__init__()
+        super().__init__(id="generate-screen")
         self.input_text = ""
         self.input_handler = InputText()
     
@@ -281,7 +286,10 @@ class GenerateScreen(Screen):
 
 
 class StartScreen(Screen):
+    def __init__(self):
+        super().__init__(id="start-screen")
     BINDINGS = [
+        
         ("d", "toggle_dark_mode", "Toggle Dark Mode")]
 
 
@@ -289,7 +297,8 @@ class StartScreen(Screen):
         yield Header()
         yield Footer()
         yield Vertical(
-            Static(r"""
+            Center(
+            Label(r"""
     /$$   /$$  /$$$$$$  /$$$$$$$$  /$$$$$$  /$$$$$$$  /$$   /$$ /$$$$$$$  /$$$$$$$  /$$     /$$
     | $$  /$$/ /$$__  $$|__  $$__/ /$$__  $$| $$__  $$| $$  | $$| $$__  $$| $$__  $$|  $$   /$$/
     | $$ /$$/ | $$  \ $$   | $$   | $$  \ $$| $$  \ $$| $$  | $$| $$  \ $$| $$  \ $$ \  $$ /$$/ 
@@ -298,7 +307,7 @@ class StartScreen(Screen):
     | $$\  $$ | $$  | $$   | $$   | $$  | $$| $$  \ $$| $$  | $$| $$  | $$| $$  | $$    | $$    
     | $$ \  $$|  $$$$$$/   | $$   |  $$$$$$/| $$$$$$$/|  $$$$$$/| $$$$$$$/| $$$$$$$/    | $$    
     |__/  \__/ \______/    |__/    \______/ |_______/  \______/ |_______/ |_______/     |__/   
-    """, id="title"),
+    """, id="title")),
         Static("[bold]コトバディ[/bold]", id="kotobuddy_subtitle"),
         Horizontal(
             Button("Start", id="start-btn", variant="primary" ),
@@ -318,8 +327,8 @@ class StartScreen(Screen):
 class KotobuddyApp(App):
     BINDINGS = [
         ("d", "toggle_dark_mode", "Toggle Dark Mode"),
+        ("s", "to_start_screen", "Start Screen"),
         ("b","back", "Back"),
-        ("s", "to_start_screen", "Start Screen")
     ]
 
     CSS_PATH = "kotobuddy.tcss"
@@ -337,31 +346,63 @@ class KotobuddyApp(App):
         else:
             self.theme = "textual-light"
     
-    def action_back(self):
-        if getattr(self, "screen_stack", None):
-            self.pop_screen()
-        else:
-            
-            return super().action_back()
+   
     
     def action_to_start_screen(self):
+        stack = getattr(self, "screen_stack", [])
+        for idx, scr in enumerate(stack):
+            if getattr(scr, "id", None) == "start-screen":
+                
+                while len(self.screen_stack) - 1 > idx:
+                    self.pop_screen()
+                return
         self.push_screen(StartScreen())
             
  
     
     def on_mount(self):
+
         self.push_screen(StartScreen())
 
     @on(Button.Pressed, "#start-btn")
     def start_kotobuddy(self):
+        stack = getattr(self, "screen_stack", [])
+        for idx, scr in enumerate(stack):
+            if getattr(scr, "id", None) == "generate-screen":
+                
+                while len(self.screen_stack) - 1 > idx:
+                    self.pop_screen()
+                return
+            
         self.push_screen(GenerateScreen())
 
+
+
+
     @on(Button.Pressed, "#saved-cards-btn")
+        
     def enter_savedcards(self):
+        
+        stack = getattr(self, "screen_stack", [])
+        for idx, scr in enumerate(stack):
+            if getattr(scr, "id", None) == "saved-cards-screen":
+                
+                while len(self.screen_stack) - 1 > idx:
+                    self.pop_screen()
+                return
+        
         self.push_screen(SavedCardsScreen())
 
     @on(Button.Pressed, "#saved-texts-btn")
     def enter_savedtexts(self):
+        stack = getattr(self, "screen_stack", [])
+        for idx, scr in enumerate(stack):
+            if getattr(scr, "id", None) == "saved-texts-screen":
+                
+                while len(self.screen_stack) - 1 > idx:
+                    self.pop_screen()
+                return
+            
         self.push_screen(SavedTextsScreen())
 
 

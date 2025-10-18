@@ -11,6 +11,7 @@ class WordNode:
         self.root_word = root_word
         self.unknown = unknown
         self.definition = definition
+        
 
             
     def __repr__(self):
@@ -54,4 +55,4 @@ class InputText:
     
 
 
-        
+            
