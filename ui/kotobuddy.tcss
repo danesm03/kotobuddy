@@ -67,7 +67,7 @@ Button{
   
     border: round $primary;
     height: auto;
-    width: 0.25fr;
+    width: 0.4fr;
     text-align: center;
 }
 

@@ -5,13 +5,13 @@ import ipadic
 
 class WordNode:
 
-    def __init__(self, word, root_word, unknown, definition):
+    def __init__(self, word, root_word, unknown, definition, reading):
 
         self.word = word
         self.root_word = root_word
         self.unknown = unknown
         self.definition = definition
-        
+        self.reading = reading
 
             
     def __repr__(self):
@@ -28,14 +28,20 @@ class InputText:
     def update(self, new_text: str):
         self.text = new_text
 
-    def get_definition(self, word):
+
+    def get_definition_and_reading(self, word):
             
             """Fetches the jamdict definition, returns the first entry. Senses is the raw english response of the first entry, gloss is the polished definition"""
             result = self.jd.lookup(word)
+            definition = ""
+            reading = ""
             if result.entries and result.entries[0].senses:
-                 return ", ".join(g.text for g in result.entries[0].senses[0].gloss)
+                 definition = " , ".join(g.text for g in result.entries[0].senses[0].gloss)
+                 reading = result.entries[0].kana_forms[0].text
             else: 
-                 return None
+                 definition =  None
+                 result = "N/A"
+            return definition, reading
             
     def to_word_nodes(self):
         
@@ -46,8 +52,9 @@ class InputText:
         text = self.text
         for word in tagger(text):
             lemma = word.feature[6]
-            definition = self.get_definition(word.surface)
-            node = WordNode(word.surface, lemma, word.is_unk, definition)
+            definition, reading = self.get_definition_and_reading(word.surface)
+            
+            node = WordNode(word.surface, lemma, word.is_unk, definition, reading)
             self.nodes.append(node)
         return self.nodes
             #results.append(f"Token: {node.word}\tLemma: {node.root_word} Definition: {node.definition}")

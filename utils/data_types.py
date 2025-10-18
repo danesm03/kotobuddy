@@ -8,9 +8,9 @@ from utils.word_parser import InputText, WordNode
 
 
 class Difficulty(Enum):
-    EASY = 3
-    MEDIUM = 2
-    HARD = 1
+    EASY = 2
+    MEDIUM = 1
+    HARD = 0
 
 
 class Flashcard(SQLModel, table=True):
@@ -29,9 +29,9 @@ class Flashcard(SQLModel, table=True):
 
 def get_due_cards(session: Session):
     today = date.today()
-    #statement = select(Flashcard).where(Flashcard.review_date <= today)
+    statement = select(Flashcard).where(Flashcard.review_date <= today)
     ##THIS IS WRONG JUST FOR TESTING
-    statement = select(Flashcard).where(Flashcard.review_date >= today)
+    #statement = select(Flashcard).where(Flashcard.review_date >= today)
     results = session.exec(statement)
     return list(results)
 

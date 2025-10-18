@@ -79,6 +79,7 @@ class ReadViewScreen(Screen):
 
         panel.mount(
         Label(content=f"Definition:{message.node.definition}          "),
+        Label(content= f"Reading:{message.node.reading}          "),
         AddToFlashcards(message.node)
         )
     
@@ -125,7 +126,7 @@ class SavedCardsScreen(Screen):
     def __init__(self):
         super().__init__(id="saved-cards-screen")
         self.counter = 0 
-        self.session = Session(engine)
+        
         self.curr_card = self.get_curr_card()
 
         
@@ -159,36 +160,47 @@ class SavedCardsScreen(Screen):
 
     @on(Button.Pressed, "#easy")
     def save_as_easy(self):
-        self.curr_card.difficulty = Difficulty.EASY
-        self.curr_card.set_review_date(self.curr_card.word, self.curr_card.difficulty)
-        self.session.add(self.curr_card)
-        self.session.commit()
-        self.session.refresh(self.curr_card)
-        self.counter += 1
-        self.curr_card = self.get_curr_card()
-        self.assemble_card()
-
+        if not self.curr_card:
+            return
+        card_id = self.curr_card.id
+        with Session(engine) as session:
+            card = session.get(Flashcard, card_id)
+            card.difficulty = Difficulty.EASY
+            card.set_review_date(card.word, card.difficulty)
+            session.add(card)
+            session.commit()
+            self.counter += 1
+            self.curr_card = self.get_curr_card()
+            self.assemble_card()
     @on(Button.Pressed, "#medium")
     def save_as_med(self):
-        self.curr_card.difficulty = Difficulty.MEDIUM
-        self.curr_card.set_review_date(self.curr_card.word, self.curr_card.difficulty)
-        self.session.add(self.curr_card)
-        self.session.commit()
-        self.session.refresh(self.curr_card)
-        self.counter += 1
-        self.curr_card = self.get_curr_card()
-        self.assemble_card()
+        if not self.curr_card:
+            return
+        card_id = self.curr_card.id
+        with Session(engine) as session:
+            card = session.get(Flashcard, card_id)
+            card.difficulty = Difficulty.MEDIUM
+            card.set_review_date(card.word, card.difficulty)
+            session.add(card)
+            session.commit()
+            self.counter += 1
+            self.curr_card = self.get_curr_card()
+            self.assemble_card()
 
     @on(Button.Pressed, "#hard")
     def save_as_hard(self):
-        self.curr_card.difficulty = Difficulty.HARD
-        self.curr_card.set_review_date(self.curr_card.word, self.curr_card.difficulty)
-        self.session.add(self.curr_card)
-        self.session.commit()
-        self.session.refresh(self.curr_card)
-        self.counter += 1
-        self.curr_card = self.get_curr_card()
-        self.assemble_card()
+        if not self.curr_card:
+            return
+        card_id = self.curr_card.id
+        with Session(engine) as session:
+            card = session.get(Flashcard, card_id)
+            card.difficulty = Difficulty.HARD
+            card.set_review_date(card.word, card.difficulty)
+            session.add(card)
+            session.commit()
+            self.counter += 1
+            self.curr_card = self.get_curr_card()
+            self.assemble_card()
 
 
 
@@ -203,19 +215,21 @@ class SavedCardsScreen(Screen):
         return cards[self.counter]
         
     def assemble_card(self):
-        
+        if not self.curr_card:
+            cs = self.query_one(ContentSwitcher)
+            front.update("No cards for review")
+            back.update("")
+            return
         card = to_word_node(self.curr_card.word)
         cs = self.query_one(ContentSwitcher)
         front = cs.query_one("#card-front", Static)
         back = cs.query_one("#card-back", Static)
-        if not self.curr_card:
-            front.update("No cards for review")
-            back.update("")
         front.update(card.root_word)
-        back.update(card.definition)
+        back.update(f"Definition:{card.definition}, Reading:{card.reading}")
 
     def on_mount(self):
-        self.set_timer(0.25, self.assemble_card())
+        self.set_timer(0.25, self.assemble_card)
+        self.curr_card = self.get_curr_card()
 
 
 
