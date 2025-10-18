@@ -13,7 +13,7 @@ from utils.data_types import Flashcard, get_due_cards, Difficulty, to_word_node
 from utils.db import engine
 
 from sqlmodel import Session
-
+from datetime import date, timedelta
 
 
 
@@ -33,7 +33,7 @@ class AddToFlashcards(Button):
         self.node = node
 
     def on_click(self, event: events.Click) -> None:
-        flashcard = Flashcard.set_review_date(word=self.node.root_word, difficulty=Difficulty.HARD)
+        flashcard = Flashcard(word=self.node.root_word, difficulty=Difficulty.HARD, review_date=date.today() + timedelta(days=Difficulty.HARD.value))
         with Session(engine) as session:
             if flashcard == None:
                 print("Flashcard is none")
@@ -166,7 +166,8 @@ class SavedCardsScreen(Screen):
         with Session(engine) as session:
             card = session.get(Flashcard, card_id)
             card.difficulty = Difficulty.EASY
-            card.set_review_date(card.word, card.difficulty)
+            card.review_date = date.today() + timedelta(days=card.difficulty.value)
+            print(f"Card {card.word} updated to review_date: {card.review_date}")
             session.add(card)
             session.commit()
             self.counter += 1
@@ -180,7 +181,8 @@ class SavedCardsScreen(Screen):
         with Session(engine) as session:
             card = session.get(Flashcard, card_id)
             card.difficulty = Difficulty.MEDIUM
-            card.set_review_date(card.word, card.difficulty)
+            card.review_date = date.today() + timedelta(days=card.difficulty.value)
+            print(f"Card {card.word} updated to review_date: {card.review_date}")
             session.add(card)
             session.commit()
             self.counter += 1
@@ -195,7 +197,8 @@ class SavedCardsScreen(Screen):
         with Session(engine) as session:
             card = session.get(Flashcard, card_id)
             card.difficulty = Difficulty.HARD
-            card.set_review_date(card.word, card.difficulty)
+            card.review_date = date.today() + timedelta(days=card.difficulty.value)
+            print(f"Card {card.word} updated to review_date: {card.review_date}")
             session.add(card)
             session.commit()
             self.counter += 1
@@ -208,6 +211,8 @@ class SavedCardsScreen(Screen):
     def get_curr_card(self):
         with Session(engine) as session:
             cards = get_due_cards(session)
+            print(f"{len(cards)} cards left for review , Counter:{self.counter}")
+
         if not cards:
             return None
         if self.counter >= len(cards):
@@ -215,15 +220,15 @@ class SavedCardsScreen(Screen):
         return cards[self.counter]
         
     def assemble_card(self):
+        cs = self.query_one(ContentSwitcher)
+        front = cs.query_one("#card-front", Static)
+        back = cs.query_one("#card-back", Static)
         if not self.curr_card:
             cs = self.query_one(ContentSwitcher)
             front.update("No cards for review")
             back.update("")
             return
         card = to_word_node(self.curr_card.word)
-        cs = self.query_one(ContentSwitcher)
-        front = cs.query_one("#card-front", Static)
-        back = cs.query_one("#card-back", Static)
         front.update(card.root_word)
         back.update(f"Definition:{card.definition}, Reading:{card.reading}")
 
