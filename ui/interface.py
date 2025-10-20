@@ -9,7 +9,7 @@ from textual.message import Message
 
 
 from utils.word_parser import InputText
-from utils.data_types import Flashcard, get_due_cards, Difficulty, to_word_node, SavedText, Node
+from utils.data_types import Flashcard, get_due_cards, Difficulty, to_word_node, SavedText, Node, get_saved_texts
 from utils.db import engine, texts_engine
 
 from sqlmodel import Session
@@ -92,6 +92,7 @@ class ReadViewScreen(Screen):
         
     
     def on_mount(self):
+        self.input_handler.to_word_nodes()
         self.nodes = self.input_handler.nodes
         self.assemble_text()
 
@@ -142,22 +143,52 @@ class ReadViewScreen(Screen):
 class SavedTextsScreen(Screen):
     def __init__(self):
         super().__init__(id="saved-texts-screen")
+        self.texts = []
     
-
+    
 
     def compose(self):
         yield Header()
         yield Footer()
-        #placeholder list - need to add item adder logic
-        yield ListView(
-            id="saved-texts-list"
+        with Center():
+            yield ListView(
+                    id="saved-texts-list"
+                )
+        yield CenterMiddle(
+            Button("Delete Text", id="delete-text-btn", variant="primary"   )
         )
+
     
     def assemble_list_view(self):
-        pass
+        text_list = self.query_one("#saved-texts-list")
+        for text in self.texts:
+            text_list.mount(ListItem(Label(f"{text.title}"),id="saved_text" + str(text.id)))
         #for text in texts_list:
             #self.query_one("#saved-texts-list").mount(ListItem(text.id))
 
+    def on_mount(self):
+        with Session(texts_engine) as session:
+            self.texts = get_saved_texts(session)
+        self.assemble_list_view()
+
+    @on(ListView.Selected, "#saved-texts-list")
+    def push_text_to_readview(self,event: ListView.Selected):
+        print("ListView.Selected triggered")
+        text_list = self.query_one("#saved-texts-list")
+        selected_item = text_list.highlighted_child
+        if selected_item != None:
+            id = int(selected_item.id.strip("saved_text"))
+            
+            selected_text = next((text for text in self.texts if text.id == id), None)
+            if selected_text:
+                print("selected text working")
+                input_handler = InputText()
+                input_handler.update(selected_text.text)
+                self.app.push_screen(ReadViewScreen(input_handler))
+            
+            
+
+    
 class SavedCardsScreen(Screen):
     
     def __init__(self):
@@ -267,6 +298,7 @@ class SavedCardsScreen(Screen):
     def delete_card(self):
         card = self.get_curr_card()
         if not card:
+            print("no card to delete")
             return
         with Session(engine) as session:
             session.delete(card)
@@ -311,7 +343,7 @@ class GenerateScreen(Screen):
 
 
     def push_txt_to_readview(self):
-        self.input_handler.to_word_nodes()
+        #self.input_handler.to_word_nodes()
         self.app.push_screen(ReadViewScreen(self.input_handler))
         
         

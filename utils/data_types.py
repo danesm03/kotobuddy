@@ -57,6 +57,11 @@ class SavedText(SQLModel, table=True):
     text: str
     nodes: List["Node"] = Relationship(back_populates="saved_text")
 
+def get_saved_texts(session: Session):
+     return list(
+          session.exec(select(SavedText))
+          )
+
  
 
 

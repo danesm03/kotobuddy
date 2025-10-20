@@ -68,7 +68,7 @@ Button{
     border: round $primary;
     height: auto;
     width: 0.4fr;
-    text-align: center;
+    content-align: center middle;
 }
 
 
@@ -76,4 +76,13 @@ Button{
     align: left bottom;
     width: 0.4fr;
 }
+
+#saved-texts-list{
+    margin: 10 10;
+    width: 25;
+    height: auto;
+
+    
+}
+
 
