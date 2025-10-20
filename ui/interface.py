@@ -160,11 +160,12 @@ class SavedTextsScreen(Screen):
 
     
     def assemble_list_view(self):
-        text_list = self.query_one("#saved-texts-list")
+        text_list = self.query_one("#saved-texts-list", ListView)
+        text_list.clear()  # newer Textual; if not available, use remove_children()
         for text in self.texts:
-            text_list.mount(ListItem(Label(f"{text.title}"),id="saved_text" + str(text.id)))
-        #for text in texts_list:
-            #self.query_one("#saved-texts-list").mount(ListItem(text.id))
+            item = ListItem(Label(text.title))
+            item.data = {"id": text.id}
+            text_list.mount(item)
 
     def on_mount(self):
         with Session(texts_engine) as session:
@@ -172,20 +173,30 @@ class SavedTextsScreen(Screen):
         self.assemble_list_view()
 
     @on(ListView.Selected, "#saved-texts-list")
-    def push_text_to_readview(self,event: ListView.Selected):
-        print("ListView.Selected triggered")
-        text_list = self.query_one("#saved-texts-list")
+    def push_text_to_readview(self, event: ListView.Selected):
+        text_list = self.query_one("#saved-texts-list", ListView)
         selected_item = text_list.highlighted_child
-        if selected_item != None:
-            id = int(selected_item.id.strip("saved_text"))
-            
-            selected_text = next((text for text in self.texts if text.id == id), None)
+        if selected_item and getattr(selected_item, "data", None):
+            tid = selected_item.data["id"]
+            selected_text = next((t for t in self.texts if t.id == tid), None)
             if selected_text:
-                print("selected text working")
                 input_handler = InputText()
                 input_handler.update(selected_text.text)
                 self.app.push_screen(ReadViewScreen(input_handler))
-            
+
+    @on(Button.Pressed, "#delete-text-btn")
+    def delete_saved_text(self):
+        text_list = self.query_one("#saved-texts-list", ListView)
+        selected_item = text_list.highlighted_child
+        if selected_item and getattr(selected_item, "data", None):
+            tid = selected_item.data["id"]
+            selected_text = next((t for t in self.texts if t.id == tid), None)
+            if selected_text:
+                with Session(texts_engine) as session:
+                    session.delete(selected_text)
+                    session.commit()
+                    self.texts = get_saved_texts(session)
+            self.assemble_list_view()
             
 
     
