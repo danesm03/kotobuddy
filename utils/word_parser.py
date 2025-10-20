@@ -30,19 +30,24 @@ class InputText:
 
 
 
-    def get_definition_and_reading(self, word):
+    def get_definition_and_reading(self, word, pos):
             
             """Fetches the jamdict definition, returns the first entry. Senses is the raw english response of the first entry, gloss is the polished definition"""
-            result = self.jd.lookup(word)
-            definition = ""
-            reading = ""
-            if result.entries and result.entries[0].senses:
-                 definition = " , ".join(g.text for g in result.entries[0].senses[0].gloss)
-                 reading = result.entries[0].kana_forms[0].text
+            result = None
+            if pos.startswith("助詞"):
+                result = self.jd.lookup(word, pos=["particle"])
+                print(f"particle result:{result}")
+            else:              
+                result = self.jd.lookup(word)
+            
+            if result.entries and result.entries[0].senses:  
+                definition = " , ".join(g.text for g in result.entries[0].senses[0].gloss)
+                reading = result.entries[0].kana_forms[0].text
+                return definition, reading
             else: 
-                 definition =  None
-                 result = "N/A"
-            return definition, reading
+                definition =  None
+                reading = "N/A"
+                return definition, reading
             
     def to_word_nodes(self):
         
@@ -53,8 +58,9 @@ class InputText:
         tagger = fugashi.GenericTagger(ipadic.MECAB_ARGS)
         text = self.text
         for word in tagger(text):
+            pos = word.feature[0]
             lemma = word.feature[6]
-            definition, reading = self.get_definition_and_reading(word.surface)
+            definition, reading = self.get_definition_and_reading(word.surface, pos)
             
             node = WordNode(word.surface, lemma, word.is_unk, definition, reading)
             self.nodes.append(node)
