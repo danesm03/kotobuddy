@@ -126,10 +126,10 @@ class SavedCardsScreen(Screen):
     def __init__(self):
         super().__init__(id="saved-cards-screen")
         self.counter = 0 
-        
-        self.curr_card = self.get_curr_card()
+        self.due_cards = []
 
-        
+
+
     def compose(self):
         yield Header()
         yield Footer()
@@ -149,6 +149,31 @@ class SavedCardsScreen(Screen):
             Button("Hard", id="hard", variant="error"),
             id="difficulties"
         )
+        
+
+
+    def save_cards(self,difficulty):
+        if not self.due_cards:
+            print("no cards to save")
+            return
+        card = self.get_curr_card()
+        if not card:
+            return
+        with Session(engine) as session:
+            card.difficulty = difficulty
+            card.review_date = date.today() + timedelta(days=card.difficulty.value)
+            print(f"Card {card.word} updated to review_date: {card.review_date}")
+            session.add(card)
+            session.commit()
+            self.due_cards = get_due_cards(session)
+        if self.due_cards:
+            self.counter = (self.counter + 1) % len(self.due_cards)
+        else:
+            self.counter = 0
+        print(f"Cards left for review: {len(self.due_cards)} counter:{self.counter} ")
+        self.assemble_card()
+        
+
 
     @on(Button.Pressed, "#card-front")
     def switch_front(self):
@@ -160,81 +185,45 @@ class SavedCardsScreen(Screen):
 
     @on(Button.Pressed, "#easy")
     def save_as_easy(self):
-        if not self.curr_card:
-            return
-        card_id = self.curr_card.id
-        with Session(engine) as session:
-            card = session.get(Flashcard, card_id)
-            card.difficulty = Difficulty.EASY
-            card.review_date = date.today() + timedelta(days=card.difficulty.value)
-            print(f"Card {card.word} updated to review_date: {card.review_date}")
-            session.add(card)
-            session.commit()
-            self.counter += 1
-            self.curr_card = self.get_curr_card()
-            self.assemble_card()
+        self.save_cards(Difficulty.EASY)
     @on(Button.Pressed, "#medium")
     def save_as_med(self):
-        if not self.curr_card:
-            return
-        card_id = self.curr_card.id
-        with Session(engine) as session:
-            card = session.get(Flashcard, card_id)
-            card.difficulty = Difficulty.MEDIUM
-            card.review_date = date.today() + timedelta(days=card.difficulty.value)
-            print(f"Card {card.word} updated to review_date: {card.review_date}")
-            session.add(card)
-            session.commit()
-            self.counter += 1
-            self.curr_card = self.get_curr_card()
-            self.assemble_card()
+        self.save_cards(Difficulty.MEDIUM)
 
     @on(Button.Pressed, "#hard")
     def save_as_hard(self):
-        if not self.curr_card:
-            return
-        card_id = self.curr_card.id
-        with Session(engine) as session:
-            card = session.get(Flashcard, card_id)
-            card.difficulty = Difficulty.HARD
-            card.review_date = date.today() + timedelta(days=card.difficulty.value)
-            print(f"Card {card.word} updated to review_date: {card.review_date}")
-            session.add(card)
-            session.commit()
-            self.counter += 1
-            self.curr_card = self.get_curr_card()
-            self.assemble_card()
+        self.save_cards(Difficulty.HARD)
 
 
 
     
     def get_curr_card(self):
-        with Session(engine) as session:
-            cards = get_due_cards(session)
-            print(f"{len(cards)} cards left for review , Counter:{self.counter}")
-
-        if not cards:
+        if not self.due_cards:
             return None
-        if self.counter >= len(cards):
+        if self.counter >= len(self.due_cards):
             self.counter = 0
-        return cards[self.counter]
+        return self.due_cards[self.counter]
         
     def assemble_card(self):
         cs = self.query_one(ContentSwitcher)
         front = cs.query_one("#card-front", Static)
         back = cs.query_one("#card-back", Static)
-        if not self.curr_card:
-            cs = self.query_one(ContentSwitcher)
+        if not self.due_cards:
+            self.counter = 0
             front.update("No cards for review")
             back.update("")
             return
-        card = to_word_node(self.curr_card.word)
+        card = to_word_node(self.get_curr_card().word)
         front.update(card.root_word)
         back.update(f"Definition:{card.definition}, Reading:{card.reading}")
 
     def on_mount(self):
-        self.set_timer(0.25, self.assemble_card)
-        self.curr_card = self.get_curr_card()
+        with Session(engine) as session:
+            self.due_cards = get_due_cards(session)
+        if not self.due_cards:
+            print("no cards available for review on mount")
+        self.counter = 0
+        self.assemble_card()
 
 
 
