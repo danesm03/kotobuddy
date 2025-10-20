@@ -72,3 +72,8 @@ Button{
 }
 
 
+#title-save-ctnr{
+    align: left bottom;
+    width: 0.4fr;
+}
+

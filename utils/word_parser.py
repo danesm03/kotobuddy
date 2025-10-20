@@ -29,6 +29,7 @@ class InputText:
         self.text = new_text
 
 
+
     def get_definition_and_reading(self, word):
             
             """Fetches the jamdict definition, returns the first entry. Senses is the raw english response of the first entry, gloss is the polished definition"""
@@ -47,7 +48,8 @@ class InputText:
         
         """REMOVE results list and returning in final functionality, just there for testing purposes to print to the LOG"""
 
-        
+        print(f"self.text= {self.text}")
+        print(f"self.nodes before:{self.nodes}")
         tagger = fugashi.GenericTagger(ipadic.MECAB_ARGS)
         text = self.text
         for word in tagger(text):
@@ -56,6 +58,7 @@ class InputText:
             
             node = WordNode(word.surface, lemma, word.is_unk, definition, reading)
             self.nodes.append(node)
+        print(f"self.nodes after:{self.nodes}")
         return self.nodes
             #results.append(f"Token: {node.word}\tLemma: {node.root_word} Definition: {node.definition}")
 

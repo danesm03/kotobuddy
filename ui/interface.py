@@ -9,8 +9,8 @@ from textual.message import Message
 
 
 from utils.word_parser import InputText
-from utils.data_types import Flashcard, get_due_cards, Difficulty, to_word_node
-from utils.db import engine
+from utils.data_types import Flashcard, get_due_cards, Difficulty, to_word_node, SavedText, Node
+from utils.db import engine, texts_engine
 
 from sqlmodel import Session
 from datetime import date, timedelta
@@ -72,6 +72,8 @@ class ReadViewScreen(Screen):
             Horizontal(id="info-panel"),
             id="readview_master"
         )
+        yield Vertical(id="title-save-ctnr")
+
 
     def on_word_clicked(self, message: WordClicked) -> None:
         panel = self.query_one("#info-panel")
@@ -84,21 +86,56 @@ class ReadViewScreen(Screen):
         )
     
     def assemble_text(self):
+        print(f"Nodes on mount: {self.nodes}")  # Debugging
         for node in self.nodes:
             self.query_one("#readtext-ctnr").mount(Word(node))
         
     
     def on_mount(self):
-        self.input_handler.to_word_nodes()
         self.nodes = self.input_handler.nodes
         self.assemble_text()
 
     def action_save_text(self):
-        my_dir = os.path.dirname(os.path.abspath(__file__))
-        project_root = os.path.dirname(my_dir)
-        data_dir = os.path.join(project_root, "data")
-        with open(os.path.join(data_dir, "text_data.py"), "a") as f:
-            f.write(f'TextData(id="{self.input_handler.text[:5]}", text="{self.input_handler.text}")\n')
+        container = self.query_one("#title-save-ctnr")
+        container.mount(Input(id="title-entry", placeholder="Text Title"))
+        container.mount(Button("Save Text", id="save-text-btn", variant="primary"))
+
+    def nodes_to_sqlmodel(self,saved_text):
+        nodes = self.input_handler.nodes
+        if not nodes:
+            raise ValueError("text is empty, no word nodes available")
+        nodelist = []
+        print(f"len_nodes:{len(nodes)} nodes:{nodes}")
+        for node in nodes:
+            if node.definition != None:
+                nodelist.append(Node(word=node.word, root_word=node.root_word, unknown=node.unknown, definition=node.definition, reading=node.reading, saved_text=saved_text))
+        print(f"len_nodelist:{len(nodelist)}")
+        return nodelist
+
+
+    @on(Button.Pressed, "#save-text-btn")
+    def write_text_save(self):
+        title = self.query_one("#title-entry", Input).value
+        text_to_save = SavedText(title=title, text=self.input_handler.text)
+        nodes=self.nodes_to_sqlmodel(text_to_save)
+        text_to_save.nodes = nodes
+        with Session(texts_engine) as session:
+            if text_to_save == None:
+                print("text to save is None")
+            else: 
+                session.add(text_to_save)
+                session.commit()
+        """
+        container = self.query_one("#title-save-ctnr")
+        title_entry = self.query_one("#title-entry", Input)
+        save_button = self.query_one("#save-text-btn", Button)
+        container.remove(title_entry)
+        container.remove(save_button)
+"""
+
+
+
+    
         
 
 
@@ -147,6 +184,7 @@ class SavedCardsScreen(Screen):
             Button("Easy", id="easy", variant="success"),
             Button("Medium", id="medium", variant="warning"),
             Button("Hard", id="hard", variant="error"),
+            Button("Delete Card", id="delete-card", variant="primary"),
             id="difficulties"
         )
         
@@ -172,6 +210,37 @@ class SavedCardsScreen(Screen):
             self.counter = 0
         print(f"Cards left for review: {len(self.due_cards)} counter:{self.counter} ")
         self.assemble_card()
+
+
+    def get_curr_card(self):
+        if not self.due_cards:
+            return None
+        if self.counter >= len(self.due_cards):
+            self.counter = 0
+        return self.due_cards[self.counter]
+        
+
+    def assemble_card(self):
+        cs = self.query_one(ContentSwitcher)
+        front = cs.query_one("#card-front", Static)
+        back = cs.query_one("#card-back", Static)
+        if not self.due_cards:
+            self.counter = 0
+            front.update("No cards for review")
+            back.update("")
+            return
+        card = to_word_node(self.get_curr_card().word)
+        front.update(card.root_word)
+        back.update(f"Definition:{card.definition}, Reading:{card.reading}")
+
+
+    def on_mount(self):
+        with Session(engine) as session:
+            self.due_cards = get_due_cards(session)
+        if not self.due_cards:
+            print("no cards available for review on mount")
+        self.counter = 0
+        self.assemble_card()
         
 
 
@@ -194,36 +263,19 @@ class SavedCardsScreen(Screen):
     def save_as_hard(self):
         self.save_cards(Difficulty.HARD)
 
-
+    @on(Button.Pressed, "#delete-card")
+    def delete_card(self):
+        card = self.get_curr_card()
+        if not card:
+            return
+        with Session(engine) as session:
+            session.delete(card)
+            session.commit()
+            self.due_cards = get_due_cards(session)
+            self.assemble_card()
 
     
-    def get_curr_card(self):
-        if not self.due_cards:
-            return None
-        if self.counter >= len(self.due_cards):
-            self.counter = 0
-        return self.due_cards[self.counter]
-        
-    def assemble_card(self):
-        cs = self.query_one(ContentSwitcher)
-        front = cs.query_one("#card-front", Static)
-        back = cs.query_one("#card-back", Static)
-        if not self.due_cards:
-            self.counter = 0
-            front.update("No cards for review")
-            back.update("")
-            return
-        card = to_word_node(self.get_curr_card().word)
-        front.update(card.root_word)
-        back.update(f"Definition:{card.definition}, Reading:{card.reading}")
 
-    def on_mount(self):
-        with Session(engine) as session:
-            self.due_cards = get_due_cards(session)
-        if not self.due_cards:
-            print("no cards available for review on mount")
-        self.counter = 0
-        self.assemble_card()
 
 
 
