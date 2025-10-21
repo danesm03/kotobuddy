@@ -3,7 +3,7 @@ import os
 from textual.app import App, ComposeResult
 from textual.screen import Screen
 from textual import on, events
-from textual.containers import  Horizontal, Vertical, Container, HorizontalScroll, Center, CenterMiddle
+from textual.containers import  Horizontal, Vertical, Container, HorizontalScroll, Center, CenterMiddle, VerticalScroll
 from textual.widgets import Static, Label, Header, Footer, ListView, ListItem, Button, Input, ContentSwitcher
 from textual.message import Message
 
@@ -66,7 +66,8 @@ class ReadViewScreen(Screen):
         yield Header()
         yield Footer()
         yield Vertical(
-            HorizontalScroll(
+            Vertical(
+            
             id="readtext-ctnr"
         ),
             Horizontal(id="info-panel"),
@@ -86,9 +87,16 @@ class ReadViewScreen(Screen):
         )
     
     def assemble_text(self):
-        print(f"Nodes on mount: {self.nodes}")  # Debugging
-        for node in self.nodes:
-            self.query_one("#readtext-ctnr").mount(Word(node))
+        container = self.query_one("#readtext-ctnr")
+        container.remove_children()
+        chunk_size = 35
+        for i in range(0, len(self.nodes), chunk_size):
+            chunk = self.nodes[i:i+chunk_size]
+            line = HorizontalScroll()
+            container.mount(line)
+            for node in chunk:
+                line.mount(Word(node))
+            
         
     
     def on_mount(self):
@@ -330,7 +338,7 @@ class GenerateScreen(Screen):
         self.input_handler = InputText()
     
     BINDINGS = [
-        ("ctrl+d", "toggle_dark_mode", "Toggle Dark Mode"),#("return", "app.push_screen(GenerateScreen)", "Start")
+        #("ctrl+d", "toggle_dark_mode", "Toggle Dark Mode"),#("return", "app.push_screen(GenerateScreen)", "Start")
     ]    
 
     def compose(self) -> ComposeResult:
@@ -391,9 +399,7 @@ class GenerateScreen(Screen):
 class StartScreen(Screen):
     def __init__(self):
         super().__init__(id="start-screen")
-    BINDINGS = [
-        
-        ("d", "toggle_dark_mode", "Toggle Dark Mode")]
+
 
 
     def compose(self) -> ComposeResult:
@@ -428,8 +434,9 @@ class StartScreen(Screen):
         
 
 class KotobuddyApp(App):
+    theme = "gruvbox"
     BINDINGS = [
-        ("d", "toggle_dark_mode", "Toggle Dark Mode"),
+        #("d", "toggle_dark_mode", "Toggle Dark Mode"),
         ("s", "to_start_screen", "Start Screen"),
         ("b","back", "Back"),
     ]
@@ -445,7 +452,7 @@ class KotobuddyApp(App):
 
     def action_toggle_dark_mode(self):
         if self.theme == "textual-light":
-            self.theme = "textual-dark"
+            self.theme = "gruvbox"
         else:
             self.theme = "textual-light"
     

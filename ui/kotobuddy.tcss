@@ -6,6 +6,8 @@
 Button{
     margin-right: 1;
 }
+
+
 #title {
     text-align: center;
     color: rgb(180, 118, 128);
@@ -35,12 +37,12 @@ Button{
 
 
 #info-panel{
-    height: 25%;
+    height: 15%;
     align: center middle;
 }
 
 #readtext-ctnr{
-    height: 75%;
+    height: 90%;
 }
 
 .word{
