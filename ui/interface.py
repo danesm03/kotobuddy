@@ -67,7 +67,6 @@ class ReadViewScreen(Screen):
         yield Footer()
         yield Vertical(
             Vertical(
-            
             id="readtext-ctnr"
         ),
             Horizontal(id="info-panel"),
@@ -89,12 +88,31 @@ class ReadViewScreen(Screen):
     def assemble_text(self):
         container = self.query_one("#readtext-ctnr")
         container.remove_children()
-        chunk_size = 35
-        for i in range(0, len(self.nodes), chunk_size):
-            chunk = self.nodes[i:i+chunk_size]
-            line = HorizontalScroll()
+        chunk_size = 55
+        chunks_list = []
+        counter = 0
+        chunk_so_far = []
+        for node in self.nodes:
+            print(f"Chunk so far: {len(chunk_so_far)}")
+            print(f"Chunks list: {len(chunks_list)}")
+            length = len(node.word)
+            print(f"length:{length}")
+            if counter + length >= chunk_size:
+                chunks_list.append(chunk_so_far)
+                counter = length
+                chunk_so_far = [node]
+            else:
+                counter += length
+                chunk_so_far.append(node)
+        if len(chunks_list) > 0:
+            chunks_list.append(chunk_so_far)
+                
+        for chunk in chunks_list:
+            print(f"Mounting chunk: {chunk}")
+            line = Horizontal()
             container.mount(line)
             for node in chunk:
+                print(f"Mounting node: {node.word}")
                 line.mount(Word(node))
             
         
@@ -102,6 +120,7 @@ class ReadViewScreen(Screen):
     def on_mount(self):
         self.input_handler.to_word_nodes()
         self.nodes = self.input_handler.nodes
+        print(f"Nodes: {self.nodes}")
         self.assemble_text()
 
     def action_save_text(self):
