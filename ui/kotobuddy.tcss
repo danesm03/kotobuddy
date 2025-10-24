@@ -81,7 +81,9 @@ Button{
 
 #saved-texts-list{
     margin: 10 10;
-    width: 25;
+    width: 40%;
+    text-align:center;
+
     height: auto;
 
     

@@ -60,7 +60,8 @@ class InputText:
         for word in tagger(text):
             pos = word.feature[0]
             lemma = word.feature[6]
-            definition, reading = self.get_definition_and_reading(word.surface, pos)
+            #conj_type = word.feature[5]
+            definition, reading = self.get_definition_and_reading(lemma, pos)
             
             node = WordNode(word.surface, lemma, word.is_unk, definition, reading)
             self.nodes.append(node)

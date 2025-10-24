@@ -28,6 +28,15 @@ def get_due_cards(session: Session):
     results = session.exec(statement)
     return list(results)
 
+def set_all_for_review(session: Session):
+    cards = list(
+          (select(Flashcard))
+     )
+    for card in cards:
+          card.review_date = date.today()
+
+    
+
 
 def to_word_node(word):
         text = InputText()
