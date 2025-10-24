@@ -106,6 +106,9 @@ class ReadViewScreen(Screen):
                 chunk_so_far.append(node)
         if len(chunks_list) > 0:
             chunks_list.append(chunk_so_far)
+
+        if len(chunk_so_far) > 0:
+            chunks_list.append(chunk_so_far)
                 
         for chunk in chunks_list:
             print(f"Mounting chunk: {chunk}")
