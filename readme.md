@@ -7,6 +7,13 @@ Review flashcards using a built-in **SRS (Spaced Repetition System)** to reinfor
 > The focus of this project is on being able to review vocabulary such as verbs, nouns, and adjective. It does not currently have proper handling for Japanese particles and conjugations
 ---
 
+
+
+https://github.com/user-attachments/assets/ab5682b7-5a06-4862-9677-429c12f8a251
+
+
+
+
 ## ✨ Features
 
 - Tokenizes Japanese text into clickable words using **Fugashi** + **IPADic**
