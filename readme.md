@@ -3,9 +3,8 @@
 A **Command-Line Japanese Language Study App**, built with [Textual UI](https://textual.textualize.io/).  
 Paste in Japanese text, click words to view definitions, and save them as flashcards.  
 Review flashcards using a built-in **SRS (Spaced Repetition System)** to reinforce long-term retention.
-> ⚠️ **Note**
-> The focus of this project is on being able to review vocabulary such as verbs, nouns, and adjective. It does not currently have proper handling for Japanese particles and conjugations
----
+s on being able to review vocabulary such as verbs, nouns, and adjective. It does not currently have proper handling for Japanese particles and conjugations
+
 
 
 
